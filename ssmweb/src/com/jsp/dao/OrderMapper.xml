@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jsp.dao.OrderMapper">
+	<select id="selectOrderListByUserId" parameterType="Long" resultType="com.jsp.domain.Order">
+		select id,code,total,order_date from tb_order where user_id = #{user_id}
+	</select>
+	
+	<select id="selectOrderByOrderId" parameterType="Long" resultMap="orderResultMap">
+		select u.*,o.id oid,o.code code,o.total total,o.user_id user_id,o.order_date order_date
+		from tb_user u inner join tb_order o
+		on u.id = user_id
+		where oid = #{order_id}
+	</select>
+	
+	<resultMap type="com.jsp.domain.Order" id="orderResultMap">
+		<id property="id" column="oid"/>
+		<result property="code" column="code"/>
+		<result property="total" column="total"/>
+		<result property="order_date" column="order_date" javaType="date"/>
+		<association property="user" javaType="com.jsp.domain.User">
+			<id property="id" column="id"/>
+			<result property="username" column="username"/>
+			<result property="loginname" column="loginname"/>
+			<result property="password" column="password"/>
+			<result property="phone" column="phone"/>
+			<result property="address" column="address"/>
+		</association>
+		<collection property="articles" javaType="ArrayList" column="oid" ofType="com.jsp.domain.Article"
+		select="com.jsp.dao.ArticleMapper.selectArticleByOrderId" fetchType="lazy">
+			<id property="id" column="id"/>
+			<result property="name" column="name"/>
+			<result property="price" column="price"/>
+			<result property="remark" column="remark"/>
+			<result property="amount" column="amount"/>
+		</collection>
+	</resultMap>
+	
+	<insert id="saveOrder" parameterType="com.jsp.domain.Order" useGeneratedKeys="true" keyProperty="id">
+		insert into tb_order (code,total,user_id,order_date) values (#{code},#{total},#{user.id},#{order_date})
+	</insert>
+	
+	<select id="selectIdByOrderCode" parameterType="String" resultType="Long">
+		select id from tb_order where code = #{uuid}
+	</select>
+	
+	<insert id="saveMiddle" parameterType="com.jsp.domain.Item">
+		insert into tb_item (order_id,article_id,amount) values (#{order_id},#{article_id},#{amount})
+	</insert>
+	
+	<delete id="deleteOrderById" parameterType="Long" >
+		delete from tb_order where id = #{id}
+	</delete>
+	
+	<delete id="deleteItemByOrderId" parameterType="Long">
+		delete from tb_item where order_id = #{id}
+	</delete>
+</mapper>
